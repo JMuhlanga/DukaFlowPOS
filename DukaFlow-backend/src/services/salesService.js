@@ -1,0 +1,2 @@
+const salesModel = require()
+
