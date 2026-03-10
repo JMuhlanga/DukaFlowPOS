@@ -1,12 +1,31 @@
-import React from 'react'
+import React, { useState, useEffect } from 'react';
 
 // src/pages/StockManagement.jsx
 const StockManagement = () => {
-    const stockItems = [
-      { id: '#001', name: 'Coffee Latte', cat: 'Drinks', price: 4.50, qty: 142, status: 'In Stock' },
-      { id: '#002', name: 'Croissant', cat: 'Food', price: 3.25, qty: 18, status: 'Low Stock' },
-      { id: '#003', name: 'Water Bottle', cat: 'Drinks', price: 1.50, qty: 0, status: 'Out' },
-    ];
+    // const stockItems = [
+    //   { id: '#001', name: 'Coffee Latte', cat: 'Drinks', price: 4.50, qty: 142, status: 'In Stock' },
+    //   { id: '#002', name: 'Croissant', cat: 'Food', price: 3.25, qty: 18, status: 'Low Stock' },
+    //   { id: '#003', name: 'Water Bottle', cat: 'Drinks', price: 1.50, qty: 0, status: 'Out' },
+    // ];
+
+    const [stockItems, setStockItems] = useState([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+      const fetchProducts = async () => {
+        try {
+          const response = await fetch('http://localhost:4000/api/products');
+          const data = await response.json();
+          setStockItems(data);
+        }
+        catch(err){
+          console.error('Failed to fetch products:', err);
+        }
+        finally {
+          setLoading(false);
+        }
+      }
+    });
   
     return (
       <div>

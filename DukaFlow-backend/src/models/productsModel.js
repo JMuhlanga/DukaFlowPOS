@@ -26,10 +26,10 @@ exports.getProductById = async ({ id }) => {
 exports.addProduct = async ({ name, sku, price, stock_quantity, min_stock_level }) => {
     try {
     const query = `
-        INSERT INTO products (name, sku, price, stock_quantity, min_stock_level) 
-        VALUES (?, ?, ?, ?, ?)
+        INSERT INTO products (name, sku, price, stock_quantity, min_stock_level, category) 
+        VALUES (?, ?, ?, ?, ?, ?)
     `;
-    const [result] = await db.execute(query, [name, sku, price, stock_quantity, min_stock_level]);
+    const [result] = await db.execute(query, [name, sku, price, stock_quantity, min_stock_level, category]);
         return result;
     } catch (error) {
         throw new Error('Failed to add product');
@@ -37,14 +37,14 @@ exports.addProduct = async ({ name, sku, price, stock_quantity, min_stock_level 
 };
 
 // Update a product including inventory levels
-exports.updateProduct = async ({ id, name, sku, price, stock_quantity, min_stock_level }) => {
+exports.updateProduct = async ({ id, name, sku, price, stock_quantity, min_stock_level, category }) => {
     try {
     const query = `
         UPDATE products 
-        SET name = ?, sku = ?, price = ?, stock_quantity = ?, min_stock_level = ? 
+        SET name = ?, sku = ?, price = ?, stock_quantity = ?, min_stock_level = ?, category = ? 
         WHERE id = ?
     `;
-        const [result] = await db.execute(query, [name, sku, price, stock_quantity, min_stock_level, id]);
+        const [result] = await db.execute(query, [name, sku, price, stock_quantity, min_stock_level, category, id]);
         return result;
     } catch (error) {
         throw new Error('Failed to update product');

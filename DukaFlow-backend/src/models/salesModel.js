@@ -1,9 +1,5 @@
 const db = require('../config/db');
 
-/**
- * Records a new sale and its associated items.
- * Uses a transaction to ensure data integrity.
- */
 exports.createSale = async ({ user_id, total_amount, payment_method, items }) => {
     const connection = await db.getConnection();
     await connection.beginTransaction();
@@ -40,6 +36,7 @@ exports.createSale = async ({ user_id, total_amount, payment_method, items }) =>
  * Retrieves a sale summary including all items for a specific ID
  */
 exports.getSaleDetails = async (saleId) => {
+    try {
     const query = `
         SELECT s.*, si.product_id, si.quantity, si.unit_price 
         FROM sales s
@@ -47,5 +44,22 @@ exports.getSaleDetails = async (saleId) => {
         WHERE s.id = ?
     `;
     const [result] = await db.execute(query, [saleId]);
-    return result;
+        return result;
+    } catch (error) {
+        throw new Error(error.message);
+    } 
 };
+
+exports.deleteSale = async (id) => {
+    try {
+        const query = 'DELETE FROM sales WHERE id = ?';
+        const [result] = await db.execute(query, [id]);
+
+        const itemQuery = 'DELETE FROM sale_items WHERE sale_id = ?';
+        await db.execute(itemQuery, [id]);  
+
+        return { message: "Sale deleted successfully" };
+    } catch (error) {
+        throw new Error(error.message);
+    }
+}   

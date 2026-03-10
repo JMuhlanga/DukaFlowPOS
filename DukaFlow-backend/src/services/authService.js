@@ -4,25 +4,32 @@ const authModel = require('../models/authModel');
 
 exports.registerUser = async ({ username, password, role }) => {
   try {
+
     if (!username || !password || !role) {
       throw new Error('Username, password and role are required');
     }
+
     if (role !== 'admin' && role !== 'user') {
-      throw new Error('Invalid role');
+      throw new Error('Invalid role. Must be "admin" or "user"');
     }
+
     if (username.length < 3 || username.length > 20) {
       throw new Error('Username must be between 3 and 20 characters');
     }
+
     if (password.length < 8) {
       throw new Error('Password must be at least 8 characters long');
     }
+
     const hashedPassword = await bcrypt.hash(password, 10);
     const result = await authModel.registerUser({ username, password: hashedPassword, role });
+    
     return result;
+
   } catch (error) {
-    throw new Error('Failed to register user');
+    throw new Error(error.message);
   }
-}
+};
 
 exports.loginUser = async ({ username, password }) => {
   try{
@@ -56,4 +63,29 @@ exports.logoutUser = async ({ username }) => {
   }
 }
 
-expor
+exports.getUsers = async () => {
+  try {
+    const result = await authModel.getUsers();
+    return result;
+  } catch (error) {
+    throw new Error('Failed to get users');
+  }
+}
+
+exports.deleteUser = async ({ username }) => {
+  try {
+    const result = await authModel.deleteUser({ username });
+    return result;
+  } catch (error) {
+    throw new Error('Failed to delete user');
+  }
+}
+
+exports.updateUser = async ({ username, password, role }) => {
+  try {
+    const result = await authModel.updateUser({ username, password, role });
+    return result;
+  } catch (error) {
+    throw new Error('Failed to update user');
+  }
+}

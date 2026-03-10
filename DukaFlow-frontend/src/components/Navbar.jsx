@@ -17,7 +17,7 @@ const Navbar = ({ user }) => {
   return (
     <nav className="w-64 bg-[#0f172a] text-slate-300 h-screen fixed left-0 top-0 flex flex-col p-4">
       <div className="flex items-center gap-3 mb-10 px-2">
-        <div className="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center text-white font-bold">Q</div>
+        <div className="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center text-white font-bold">DF</div>
         <h1 className="text-xl font-bold text-white tracking-tight">DukaFlow</h1>
       </div>
 
