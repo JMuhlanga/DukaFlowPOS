@@ -1,0 +1,13 @@
+{
+  "name": "dukaflowpos",
+  "private": true,
+  "version": "0.0.0",
+  "scripts": {
+    "dev": "concurrently -n backend,frontend -c green,cyan \"npm --prefix DukaFlow-backend run dev\" \"npm --prefix DukaFlow-frontend run dev\"",
+    "start": "concurrently -n backend,frontend -c green,cyan \"npm --prefix DukaFlow-backend run start\" \"npm --prefix DukaFlow-frontend run preview\"",
+    "install:all": "npm --prefix DukaFlow-backend install && npm --prefix DukaFlow-frontend install"
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.1"
+  }
+}

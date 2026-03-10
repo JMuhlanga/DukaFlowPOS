@@ -19,6 +19,7 @@ const StatCard = ({ title, value, change, color }) => (
     const [stats, setStats] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
+    const [currencyCode, setCurrencyCode] = useState('USD');
 
     useEffect(() => {
       let cancelled = false;
@@ -40,15 +41,38 @@ const StatCard = ({ title, value, change, color }) => (
       return () => { cancelled = true; };
     }, [apiBaseUrl]);
 
+    useEffect(() => {
+      let cancelled = false;
+      const load = async () => {
+        try {
+          const response = await fetch(`${apiBaseUrl}/api/settings`);
+          const data = await response.json().catch(() => ({}));
+          if (!response.ok) throw new Error(data?.error || 'Failed to load settings');
+          const next = String(data?.currency ?? '').trim();
+          if (!cancelled && next) setCurrencyCode(next);
+        } catch {
+          // keep fallback
+        }
+      };
+      load();
+      return () => { cancelled = true; };
+    }, [apiBaseUrl]);
+
     const todayLabel = useMemo(() => {
       const d = new Date();
       return d.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: '2-digit' });
     }, []);
 
     const currency = useMemo(() => {
-      const fmt = new Intl.NumberFormat(undefined, { style: 'currency', currency: 'USD' });
-      return (n) => fmt.format(Number(n || 0));
-    }, []);
+      const code = String(currencyCode || 'USD').trim().toUpperCase();
+      try {
+        const fmt = new Intl.NumberFormat(undefined, { style: 'currency', currency: code });
+        return (n) => fmt.format(Number(n || 0));
+      } catch {
+        const fmt = new Intl.NumberFormat(undefined, { style: 'currency', currency: 'USD' });
+        return (n) => fmt.format(Number(n || 0));
+      }
+    }, [currencyCode]);
 
     const todayIncome = loading ? '—' : currency(stats?.today_income);
     const todayTransactions = loading ? '—' : String(stats?.today_transactions ?? 0);
@@ -72,8 +96,8 @@ const StatCard = ({ title, value, change, color }) => (
           <StatCard title="Low Stock Items" value={lowStockItems} change={loading ? 'Loading…' : 'Needs attention'} color="bg-rose-500" />
         </div>
   
-        <div className="grid grid-cols-3 gap-6">
-          <div className="col-span-2 bg-white p-6 rounded-2xl border border-slate-100 shadow-sm min-h-[400px]">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="lg:col-span-2 bg-white p-6 rounded-2xl border border-slate-100 shadow-sm min-h-[320px]">
             <h3 className="font-bold text-slate-800 mb-4">Income per Hour</h3>
             {/* Integrate a Chart library like Recharts here */}
             <div className="h-64 bg-slate-50 rounded-xl flex items-center justify-center text-slate-400 italic">
@@ -83,7 +107,7 @@ const StatCard = ({ title, value, change, color }) => (
           
           <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
             <h3 className="font-bold text-slate-800 mb-4">Stock Movement</h3>
-            <div className="flex items-center justify-center h-full">
+            <div className="flex items-center justify-center min-h-[240px]">
               {/* Donut Chart placeholder */}
               <div className="w-32 h-32 rounded-full border-[12px] border-emerald-500 relative flex items-center justify-center">
                 <span className="text-xl font-bold">{todayItemsSold}</span>

@@ -1,11 +1,13 @@
 import React, { useMemo, useState } from 'react'
-import { LayoutDashboard, ShoppingCart, Package, Users, Settings, LogOut, KeyRound, ChevronUp } from 'lucide-react';
+import { LayoutDashboard, ShoppingCart, Package, Users, Settings, LogOut, KeyRound, ChevronUp, Menu, X } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
+import logo from '../assets/dukaflow-logo.png';
 
 const Navbar = ({ user }) => {
   const location = useLocation();
   const isAdmin = user?.role === 'admin';
-  const [menuOpen, setMenuOpen] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [accountMenuOpen, setAccountMenuOpen] = useState(false);
   const [changePasswordOpen, setChangePasswordOpen] = useState(false);
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
@@ -29,13 +31,15 @@ const Navbar = ({ user }) => {
   };
 
   const logout = () => {
-    setMenuOpen(false);
+    setSidebarOpen(false);
+    setAccountMenuOpen(false);
     clearAuthStorage();
     window.location.assign('/login');
   };
 
   const openChangePassword = () => {
-    setMenuOpen(false);
+    setSidebarOpen(false);
+    setAccountMenuOpen(false);
     setChangePasswordError('');
     setCurrentPassword('');
     setNewPassword('');
@@ -101,55 +105,115 @@ const Navbar = ({ user }) => {
     { name: 'Settings', icon: <Settings size={20} />, path: '/settings', public: false },
   ];
 
-  return (
-    <nav className="w-64 bg-[#0f172a] text-slate-300 h-screen fixed left-0 top-0 flex flex-col p-4">
-      <div className="flex items-center gap-3 mb-10 px-2">
-        <div className="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center text-white font-bold">DF</div>
-        <h1 className="text-xl font-bold text-white tracking-tight">DukaFlow</h1>
-      </div>
+  const visibleMenuItems = menuItems.filter((item) => item.public || isAdmin);
 
-      <div className="flex-1 space-y-1">
-        {menuItems.map((item) => {
-          if (!item.public && !isAdmin) return null;
-          const isActive = location.pathname === item.path;
-          
-          return (
-            <Link
-              key={item.name}
-              to={item.path}
-              className={`flex items-center gap-3 px-3 py-3 rounded-xl transition-all ${
-                isActive ? 'bg-blue-600/10 text-blue-400 border border-blue-500/20' : 'hover:bg-slate-800'
-              }`}
+  const NavLinks = ({ onNavigate }) => (
+    <div className="flex-1 space-y-1">
+      {visibleMenuItems.map((item) => {
+        const isActive = location.pathname === item.path;
+
+        return (
+          <Link
+            key={item.name}
+            to={item.path}
+            onClick={onNavigate}
+            className={`flex items-center gap-3 px-3 py-3 rounded-xl transition-all ${
+              isActive
+                ? 'bg-[#12e4c3]/10 text-[#12e4c3] border border-[#12e4c3]/30'
+                : 'hover:bg-slate-800'
+            }`}
+          >
+            {item.icon}
+            <span className="font-medium">{item.name}</span>
+          </Link>
+        );
+      })}
+    </div>
+  );
+
+  const AccountSection = ({ dropdownPlacement = 'up' }) => (
+    <div className="pt-4 border-t border-slate-800">
+      <div className="relative">
+        <button
+          type="button"
+          onClick={() => setAccountMenuOpen((v) => !v)}
+          className="w-full flex items-center gap-3 px-2 py-3 rounded-xl hover:bg-slate-800 transition-colors"
+        >
+          <div className="w-10 h-10 bg-[#12e4c3] rounded-full flex items-center justify-center text-slate-900">
+            {initials}
+          </div>
+          <div className="flex-1 text-left">
+            <p className="text-sm font-bold text-white leading-tight">{displayName}</p>
+            <p className="text-xs text-slate-500 capitalize">{user?.role || 'User'}</p>
+          </div>
+          <ChevronUp
+            size={18}
+            className={`text-slate-400 transition-transform ${accountMenuOpen ? 'rotate-180' : ''}`}
+          />
+        </button>
+
+        {accountMenuOpen ? (
+          <div
+            className={`absolute ${dropdownPlacement === 'down' ? 'top-[72px]' : 'bottom-[72px]'} left-0 right-0 bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-2xl`}
+          >
+            <button
+              type="button"
+              onClick={openChangePassword}
+              className="w-full flex items-center gap-3 px-4 py-3 text-sm font-semibold text-slate-200 hover:bg-slate-800"
             >
-              {item.icon}
-              <span className="font-medium">{item.name}</span>
-            </Link>
-          );
-        })}
+              <KeyRound size={18} />
+              Change password
+            </button>
+            <button
+              type="button"
+              onClick={logout}
+              className="w-full flex items-center gap-3 px-4 py-3 text-sm font-semibold text-rose-300 hover:bg-slate-800"
+            >
+              <LogOut size={18} />
+              Logout
+            </button>
+          </div>
+        ) : null}
       </div>
+    </div>
+  );
 
-      <div className="pt-4 border-t border-slate-800">
-        <div className="relative">
+  return (
+    <>
+      {/* Mobile top bar */}
+      <div className="md:hidden fixed top-0 left-0 right-0 z-40 bg-[#0b2027] text-slate-200 border-b border-slate-800">
+        <div className="h-16 px-4 flex items-center justify-between">
           <button
             type="button"
-            onClick={() => setMenuOpen(v => !v)}
-            className="w-full flex items-center gap-3 px-2 py-3 rounded-xl hover:bg-slate-800 transition-colors"
+            onClick={() => {
+              setAccountMenuOpen(false);
+              setSidebarOpen(true);
+            }}
+            className="p-2 rounded-xl hover:bg-slate-800"
+            aria-label="Open navigation"
           >
-            <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center text-white">
-              {initials}
-            </div>
-            <div className="flex-1 text-left">
-              <p className="text-sm font-bold text-white leading-tight">{displayName}</p>
-              <p className="text-xs text-slate-500 capitalize">{user?.role || 'User'}</p>
-            </div>
-            <ChevronUp
-              size={18}
-              className={`text-slate-400 transition-transform ${menuOpen ? 'rotate-180' : ''}`}
-            />
+            <Menu size={22} />
           </button>
 
-          {menuOpen ? (
-            <div className="absolute bottom-[72px] left-0 right-0 bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-2xl">
+          <div className="flex items-center gap-2">
+            <img src={logo} alt="DukaFlow logo" className="h-8 w-auto" />
+            <span className="font-bold tracking-tight text-white leading-none">
+              <span className="text-slate-200">Duka</span>
+              <span className="text-[#12e4c3]">Flow</span>
+            </span>
+          </div>
+
+          <button
+            type="button"
+            onClick={() => setAccountMenuOpen((v) => !v)}
+            className="w-9 h-9 bg-[#12e4c3] rounded-full flex items-center justify-center text-slate-900 font-bold"
+            aria-label="Open account menu"
+          >
+            {initials}
+          </button>
+
+          {accountMenuOpen ? (
+            <div className="absolute top-16 right-3 w-56 bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-2xl">
               <button
                 type="button"
                 onClick={openChangePassword}
@@ -170,6 +234,62 @@ const Navbar = ({ user }) => {
           ) : null}
         </div>
       </div>
+
+      {/* Mobile drawer */}
+      {sidebarOpen ? (
+        <div className="md:hidden fixed inset-0 z-50">
+          <button
+            type="button"
+            className="absolute inset-0 bg-black/60"
+            onClick={() => setSidebarOpen(false)}
+            aria-label="Close navigation"
+          />
+
+          <div className="absolute left-0 top-0 bottom-0 w-[18rem] bg-[#0b2027] text-slate-300 p-4 flex flex-col">
+            <div className="flex items-center justify-between mb-6 px-2">
+              <div className="flex items-center gap-3">
+                <img src={logo} alt="DukaFlow logo" className="h-10 w-auto" />
+                <h1 className="text-xl font-bold tracking-tight text-white leading-none">
+                  <span className="text-slate-200">Duka</span>
+                  <span className="text-[#12e4c3]">Flow</span>
+                </h1>
+              </div>
+              <button
+                type="button"
+                onClick={() => setSidebarOpen(false)}
+                className="p-2 rounded-xl hover:bg-slate-800"
+                aria-label="Close navigation"
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            <NavLinks
+              onNavigate={() => {
+                setSidebarOpen(false);
+                setAccountMenuOpen(false);
+              }}
+            />
+
+            <AccountSection dropdownPlacement="down" />
+          </div>
+        </div>
+      ) : null}
+
+      {/* Desktop sidebar */}
+      <nav className="hidden md:flex w-64 bg-[#0b2027] text-slate-300 h-screen fixed left-0 top-0 flex-col p-4">
+        <div className="flex items-center gap-3 mb-10 px-2">
+          <img src={logo} alt="DukaFlow logo" className="h-10 w-auto" />
+          <h1 className="text-xl font-bold tracking-tight text-white leading-none">
+            <span className="text-slate-200">Duka</span>
+            <span className="text-[#12e4c3]">Flow</span>
+          </h1>
+        </div>
+
+        <NavLinks onNavigate={() => setAccountMenuOpen(false)} />
+
+        <AccountSection dropdownPlacement="up" />
+      </nav>
 
       {changePasswordOpen ? (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-6">
@@ -249,7 +369,7 @@ const Navbar = ({ user }) => {
           </div>
         </div>
       ) : null}
-    </nav>
+    </>
   );
 };
 
