@@ -48,3 +48,24 @@ exports.getUsers = async (req, res) => {
     res.status(401).json({ error: error.message });
   }
 };
+
+exports.deleteUser = async (req, res) => {
+  try {
+    const { username } = req.params;
+    const data = await authService.deleteUser({ username });
+    res.json(data);
+  } catch (error) {
+    res.status(401).json({ error: error.message });
+  }
+};
+
+exports.changePassword = async (req, res) => {
+  try {
+    const { currentPassword, newPassword } = req.body;
+    const username = req.user?.username;
+    const data = await authService.changePassword({ username, currentPassword, newPassword });
+    res.json(data);
+  } catch (error) {
+    res.status(401).json({ error: error.message });
+  }
+};

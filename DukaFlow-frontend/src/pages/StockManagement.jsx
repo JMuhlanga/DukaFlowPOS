@@ -1,31 +1,101 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 
 // src/pages/StockManagement.jsx
 const StockManagement = () => {
-    // const stockItems = [
-    //   { id: '#001', name: 'Coffee Latte', cat: 'Drinks', price: 4.50, qty: 142, status: 'In Stock' },
-    //   { id: '#002', name: 'Croissant', cat: 'Food', price: 3.25, qty: 18, status: 'Low Stock' },
-    //   { id: '#003', name: 'Water Bottle', cat: 'Drinks', price: 1.50, qty: 0, status: 'Out' },
-    // ];
+    const apiBaseUrl = useMemo(() => 'http://localhost:4000', []);
 
     const [stockItems, setStockItems] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [error, setError] = useState('');
 
     useEffect(() => {
+      let cancelled = false;
+
       const fetchProducts = async () => {
+        setError('');
+        setLoading(true);
         try {
-          const response = await fetch('http://localhost:4000/api/products');
-          const data = await response.json();
-          setStockItems(data);
+          const response = await fetch(`${apiBaseUrl}/api/products`);
+          const data = await response.json().catch(() => []);
+          if (!response.ok) {
+            throw new Error(data?.error || 'Failed to load products');
+          }
+          if (!cancelled) {
+            setStockItems(Array.isArray(data) ? data : []);
+          }
+        } catch (err) {
+          if (!cancelled) {
+            console.error('Failed to fetch products:', err);
+            setError(err?.message || 'Failed to load products');
+          }
+        } finally {
+          if (!cancelled) {
+            setLoading(false);
+          }
         }
-        catch(err){
-          console.error('Failed to fetch products:', err);
-        }
-        finally {
-          setLoading(false);
+      };
+
+      fetchProducts();
+
+      return () => {
+        cancelled = true;
+      };
+    }, [apiBaseUrl]);
+
+    const {
+      totalProducts,
+      inStockCount,
+      lowStockCount,
+      outOfStockCount,
+    } = useMemo(() => {
+      let total = stockItems.length;
+      let inStock = 0;
+      let lowStock = 0;
+      let outOfStock = 0;
+
+      for (const item of stockItems) {
+        const qty = Number(item?.stock_quantity ?? 0);
+        const min = Number(item?.min_stock_level ?? 0);
+
+        if (qty <= 0) {
+          outOfStock += 1;
+        } else if (qty > 0 && qty <= min) {
+          lowStock += 1;
+        } else if (qty > min) {
+          inStock += 1;
         }
       }
-    });
+
+      return {
+        totalProducts: total,
+        inStockCount: inStock,
+        lowStockCount: lowStock,
+        outOfStockCount: outOfStock,
+      };
+    }, [stockItems]);
+
+    const rows = useMemo(() => {
+      return stockItems.map((item) => {
+        const qty = Number(item?.stock_quantity ?? 0);
+        const min = Number(item?.min_stock_level ?? 0);
+        let status = 'In Stock';
+
+        if (qty <= 0) {
+          status = 'Out of Stock';
+        } else if (qty > 0 && qty <= min) {
+          status = 'Low Stock';
+        }
+
+        return {
+          id: item.id,
+          name: item.name,
+          category: item.category,
+          price: Number(item.price ?? 0),
+          quantity: qty,
+          status,
+        };
+      });
+    }, [stockItems]);
   
     return (
       <div>
@@ -42,17 +112,25 @@ const StockManagement = () => {
   
         <div className="grid grid-cols-4 gap-6 mb-8">
           {[
-            { label: 'Total Products', val: '248', color: 'text-slate-800' },
-            { label: 'In Stock', val: '215', color: 'text-emerald-500' },
-            { label: 'Low Stock', val: '25', color: 'text-amber-500' },
-            { label: 'Out of Stock', val: '8', color: 'text-rose-500' },
-          ].map(s => (
+            { label: 'Total Products', val: totalProducts, color: 'text-slate-800' },
+            { label: 'In Stock', val: inStockCount, color: 'text-emerald-500' },
+            { label: 'Low Stock', val: lowStockCount, color: 'text-amber-500' },
+            { label: 'Out of Stock', val: outOfStockCount, color: 'text-rose-500' },
+          ].map((s) => (
             <div key={s.label} className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
               <p className="text-sm text-slate-400 font-medium mb-1">{s.label}</p>
-              <p className={`text-3xl font-bold ${s.color}`}>{s.val}</p>
+              <p className={`text-3xl font-bold ${s.color}`}>
+                {loading ? '—' : s.val}
+              </p>
             </div>
           ))}
         </div>
+
+        {error ? (
+          <div className="bg-rose-50 border border-rose-100 text-rose-700 text-sm font-semibold rounded-xl px-4 py-3 mb-4">
+            {error}
+          </div>
+        ) : null}
   
         <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
           <table className="w-full text-left">
@@ -68,18 +146,23 @@ const StockManagement = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
-              {stockItems.map(item => (
+              {rows.map((item) => (
                 <tr key={item.id} className="text-sm text-slate-600">
-                  <td className="px-6 py-4 font-mono">{item.id}</td>
+                  <td className="px-6 py-4 font-mono">#{String(item.id).padStart(3, '0')}</td>
                   <td className="px-6 py-4 font-bold text-slate-800">{item.name}</td>
-                  <td className="px-6 py-4">{item.cat}</td>
+                  <td className="px-6 py-4">{item.category}</td>
                   <td className="px-6 py-4 font-bold">${item.price.toFixed(2)}</td>
-                  <td className="px-6 py-4">{item.qty}</td>
+                  <td className="px-6 py-4">{item.quantity}</td>
                   <td className="px-6 py-4">
-                    <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase ${
-                      item.status === 'In Stock' ? 'bg-emerald-50 text-emerald-600' : 
-                      item.status === 'Low Stock' ? 'bg-amber-50 text-amber-600' : 'bg-rose-50 text-rose-600'
-                    }`}>
+                    <span
+                      className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase ${
+                        item.status === 'In Stock'
+                          ? 'bg-emerald-50 text-emerald-600'
+                          : item.status === 'Low Stock'
+                          ? 'bg-amber-50 text-amber-600'
+                          : 'bg-rose-50 text-rose-600'
+                      }`}
+                    >
                       {item.status}
                     </span>
                   </td>

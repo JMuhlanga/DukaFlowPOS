@@ -30,6 +30,26 @@ exports.logoutUser = async ({ username, token }) => {
     }
 }
 
+exports.setUserToken = async ({ username, token }) => {
+    try {
+        const query = 'UPDATE users SET token = ? WHERE username = ?';
+        const [result] = await db.execute(query, [token, username]);
+        return result;
+    } catch (error) {
+        throw new Error(error.message);
+    }
+}
+
+exports.updatePasswordHash = async ({ username, passwordHash }) => {
+    try {
+        const query = 'UPDATE users SET password_hash = ? WHERE username = ?';
+        const [result] = await db.execute(query, [passwordHash, username]);
+        return result;
+    } catch (error) {
+        throw new Error(error.message);
+    }
+}
+
 exports.getUserByUsername = async ({ username }) => {
     try {
         const query = 'SELECT * FROM users WHERE username = ?';

@@ -12,7 +12,7 @@ exports.getProducts = async () => {
 };
 
 // Fetch a single product by ID
-exports.getProductById = async ({ id }) => {
+exports.getProductById = async (id) => {
     try {
     const query = 'SELECT * FROM products WHERE id = ?';
     const [result] = await db.execute(query, [id]);
@@ -23,7 +23,7 @@ exports.getProductById = async ({ id }) => {
 };
 
 // Add a product with inventory fields
-exports.addProduct = async ({ name, sku, price, stock_quantity, min_stock_level }) => {
+exports.addProduct = async ({ name, sku, price, stock_quantity, min_stock_level, category }) => {
     try {
     const query = `
         INSERT INTO products (name, sku, price, stock_quantity, min_stock_level, category) 

@@ -7,6 +7,10 @@ const PORT = process.env.PORT || 4000;
 
 // Import Routes
 const authRoutes = require('./routes/authRoutes');
+const salesRoutes = require('./routes/salesRoutes');
+const productRoutes = require('./routes/productsRoutes');
+const dashboardRoutes = require('./routes/dashboardRoutes');
+const settingsRoutes = require('./routes/settingsRoutes');
 
 // Import Middleware
 const loggerMiddleware = require('./middleware/logger');
@@ -23,6 +27,10 @@ app.get('/', (req, res) => {
 
 // Routes
 app.use('/api/auth', authRoutes);
+app.use('/api/products',productRoutes);
+app.use('/api/sales',salesRoutes);
+app.use('/api/dashboard', dashboardRoutes);
+app.use('/api/settings', settingsRoutes);
 
 
 // Example of using the DB in a route

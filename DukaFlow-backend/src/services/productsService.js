@@ -34,15 +34,15 @@ exports.addProduct = async ({ name, sku, price, stock_quantity, min_stock_level 
     }
 }
 
-exports.updateProduct = async ({ id, name, sku, price, stock_quantity, min_stock_level }) => {
+exports.updateProduct = async ({ id, name, sku, price, stock_quantity, min_stock_level, category }) => {
     try {
-        if (!id || !name || !sku || !price || !stock_quantity || !min_stock_level) {
+        if (!id || !name || !sku || !price || !stock_quantity || !min_stock_level || !category) {
             throw new Error('All fields are required');
         }
-        if (typeof id !== 'string' || typeof name !== 'string' || typeof sku !== 'string' || typeof price !== 'number' || typeof stock_quantity !== 'number' || typeof min_stock_level !== 'number') {
+        if (typeof name !== 'string' || typeof sku !== 'string' || typeof price !== 'number' || typeof stock_quantity !== 'number' || typeof min_stock_level !== 'number' || typeof category !== 'string') {
             throw new Error('All fields must be strings and numbers');
         }
-        const product = await productsModel.updateProduct({ id, name, sku, price, stock_quantity, min_stock_level });
+        const product = await productsModel.updateProduct({ id, name, sku, price, stock_quantity, min_stock_level, category });
         return product;
     } catch (error) {
         throw new Error(error.message);

@@ -1,4 +1,5 @@
 // src/App.jsx
+import React, { useMemo } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Layout from './components/Layout';
 
@@ -8,38 +9,48 @@ import Sales from './pages/Sales';
 import StockManagement from './pages/StockManagement';
 import UserManagement from './pages/UserManagement';
 import Settings from './pages/Settings';
+import Login from './pages/Login';
 
 function App() {
-  // This state would eventually come from your Auth Context/Backend
-  // Change role to 'user' to test the restriction logic
-  const currentUser = { 
-    name: "José Muhlanga", 
-    role: "admin", 
-    email: "jose@dukaflow.com" 
-  };
+  const currentUser = useMemo(() => {
+    const raw = window.localStorage.getItem('dukaflow_user') ?? window.sessionStorage.getItem('dukaflow_user');
+    try {
+      const parsed = raw ? JSON.parse(raw) : null;
+      return parsed || null;
+    } catch {
+      return null;
+    }
+  }, []);
 
-  const isAdmin = currentUser.role === 'admin';
+  const token = useMemo(() => {
+    return window.localStorage.getItem('dukaflow_token') ?? window.sessionStorage.getItem('dukaflow_token');
+  }, []);
+
+  const isLoggedIn = Boolean(currentUser && token);
+  const isAdmin = currentUser?.role === 'admin';
 
   return (
     <Router>
       <Layout user={currentUser}>
         <Routes>
+          <Route path="/login" element={isLoggedIn ? <Navigate to="/" replace /> : <Login />} />
+
           {/* Public Routes (Accessible by both Admin and User) */}
-          <Route path="/" element={<Dashboard />} />
-          <Route path="/sales" element={<Sales />} />
-          <Route path="/stock" element={<StockManagement />} />
+          <Route path="/" element={isLoggedIn ? <Dashboard /> : <Navigate to="/login" replace />} />
+          <Route path="/sales" element={isLoggedIn ? <Sales /> : <Navigate to="/login" replace />} />
+          <Route path="/stock" element={isLoggedIn ? <StockManagement /> : <Navigate to="/login" replace />} />
 
           {/* Admin Only Routes */}
           {isAdmin ? (
             <>
-              <Route path="/users" element={<UserManagement />} />
-              <Route path="/settings" element={<Settings />} />
+              <Route path="/users" element={isLoggedIn ? <UserManagement /> : <Navigate to="/login" replace />} />
+              <Route path="/settings" element={isLoggedIn ? <Settings /> : <Navigate to="/login" replace />} />
             </>
           ) : (
             <>
               {/* Redirect users away from admin pages if they try to access via URL */}
-              <Route path="/users" element={<Navigate to="/" replace />} />
-              <Route path="/settings" element={<Navigate to="/" replace />} />
+              <Route path="/users" element={<Navigate to={isLoggedIn ? "/" : "/login"} replace />} />
+              <Route path="/settings" element={<Navigate to={isLoggedIn ? "/" : "/login"} replace />} />
             </>
           )}
 

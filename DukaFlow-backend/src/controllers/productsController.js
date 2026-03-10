@@ -30,7 +30,8 @@ exports.addProduct = async (req, res) => {
 
 exports.updateProduct = async (req, res) => {
     try {
-        const { id, name, sku, price, stock_quantity, min_stock_level, category } = req.body;
+        const id = req.params.id;
+        const { name, sku, price, stock_quantity, min_stock_level, category } = req.body;
         const data = await productsService.updateProduct({ id, name, sku, price, stock_quantity, min_stock_level, category });
         res.json(data);
     } catch (error) {
@@ -49,7 +50,8 @@ exports.deleteProduct = async (req, res) => {
 
 exports.modifyStockQuantity = async (req, res) => {
     try {
-        const { id, quantity } = req.body;
+        const id = req.params.id;
+        const { quantity } = req.body;
         const data = await productsService.modifyStockQuantity({ id, quantity });
         res.json(data);    } catch (error) {
         res.status(401).json({ error: error.message });
